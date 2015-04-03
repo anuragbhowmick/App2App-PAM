@@ -34,65 +34,39 @@ public class MainActivity extends ActionBarActivity implements BannerAdListener 
 //	private FrameLayout vizAdSlot;
 	private boolean isVizuryInterested= false;
 	private boolean isMoPubViewDestroyed = false;
-	FrameLayout parent;
+	private String vizBannerURL;
+	FrameLayout adSlotFramelayout;
 	MoPubView mView;
 	
-	WebView w;
+	WebView vizuryWebView;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		
-		
-//		moPubView = (MoPubView) findViewById(R.id.adview);
-//		moPubView.setAdUnitId("b195f8dd8ded45fe847ad89ed1d016da");
-//		moPubView.setAdUnitId("fa3986291f6c45b9853e8126acd5224d"); // Enter your Ad Unit ID from www.mopub.com
-//		moPubView.setAutorefreshEnabled(true);
-//		moPubView.setKeywords("hello world");
-		
-//		moPubView.loadAd();
-//		moPubView.setBannerAdListener(this);
-		
-//		 WebView wv = (WebView) findViewById(R.id.webview);
-//		 wv.getSettings().setJavaScriptEnabled(true);
-//		 wv.setBackgroundColor(Color.TRANSPARENT);
-//		 String html = "%3Chtml%3E%3Chead%3E%3Cscript%20type%3D%27text%2Fjavascript%27%3Evar%20m_u%20%3D%27http%3A%2F%2Fwww.vizury.com%2Fcampaign%2Fshowad.php%27%3B%20document.write%20(%22%3Cscr%22%2B%22ipt%20type%3D%27text%2Fjavascript%27%20src%3D%27%22%2Bm_u)%3B%20document.write%20(%22%3Fwidth%3D300%22)%3B%20document.write%20(%22%26amp%3Bheight%3D250%22)%3B%20document.write%20(%22%26amp%3Bpublisher_client_id%3D5591%22)%3B%20document.write%20(%22%26amp%3Bloc%3D%22%20%2B%20escape(window.location))%3B%20if%20(document.referrer)%20document.write%20(%22%26amp%3Brfr%3D%22%20%2B%20escape(document.referrer))%3B%20document.write%20(%22%27%3E%3C%5C%2Fscr%22%2B%22ipt%3E%22)%3B%20%3C%2Fscript%3E%20%3C%2Fhead%3E%3C%2Fhtml%3E";
-//		 String html = "<html><body>You scored <b>192</b> points.</body></html>";
-//		 wv.loadUrl("http://www.vizury.com/banners/images/common/AdDisp.php?aid=1471&filename=MA_Jabong_IN/HTML5_MultiProduct_AppType1_24Sep.php&width=320&height=50&template_id=40&isIframeToUse=1");
-//		 wv.loadData(html, "text/html", "utf-8");
-		    
-			
-//	     w = new WebView(this);
-//		 w.setLayoutParams(new LayoutParams
-//	        		(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
-//		 w.getSettings().setJavaScriptEnabled(true);
-//	     w.loadUrl("http://www.vizury.com/banners/images/common/AdDisp.php?aid=1471&filename=MA_Jabong_IN/HTML5_MultiProduct_AppType1_24Sep.php&width=320&height=50&template_id=40&isIframeToUse=1");
+				 
+		adSlotFramelayout = (FrameLayout) findViewById(R.id.adSlotFrame);
 
-//		 w.loadData(html, "text/html", "utf-8");
-
-//		 moPubView.addView(w);			
-	     
+		 vizuryWebView = new WebView(this);
+		 vizuryWebView.getSettings().setJavaScriptEnabled(true);
 		 
-//		 vizAdSlot = (FrameLayout)findViewById(R.id.framelayout1);
-		 
-		 parent = (FrameLayout) findViewById(R.id.adSlotFrame);
-
-		 w = new WebView(this);
-	     w.getSettings().setJavaScriptEnabled(true);
 //		 vizAdSlot.addView(w);
 
-	     getVizuryInterest();
-		 initializeMoPub();
+//	     getVizuryInterest();
+//		 initializeMoPub();
 
+		 initMoPub();
+		 checkVizuryInterest();
+		 
 		 Button b = (Button) findViewById(R.id.button1);
 		 b.setOnClickListener(new OnClickListener() {
 			
 			@Override
 			public void onClick(View v) {
 				Log.d("AB","onCLick : Is vizury Interested ? " + isVizuryInterested);
-				getVizuryInterest();
-				initializeMoPub();
+//				getVizuryInterest();
+//				initializeMoPub();
+				 checkVizuryInterest();
 			}
 		});
 		
@@ -103,27 +77,46 @@ public class MainActivity extends ActionBarActivity implements BannerAdListener 
 		new GetVizuryAd().execute(url);
 	}
 	
+	private void initMoPub() {
+		mView = new MoPubView(getApplicationContext());
+		mView.setAdUnitId("b195f8dd8ded45fe847ad89ed1d016da");
+		mView.loadAd();
+		mView.setBannerAdListener(this);
+	}
+	
+	private void checkVizuryInterest() {
+		String url="http://localhost:8888/getVizInterest.php?width=300&height=50";
+		new GetVizuryAd().execute(url);
+		
+		if(isVizuryInterested) {
+			adSlotFramelayout.removeAllViews();
+			adSlotFramelayout.addView(vizuryWebView);
+			vizuryWebView.loadUrl(vizBannerURL);
+		}
+		else {
+			adSlotFramelayout.removeAllViews();
+			adSlotFramelayout.addView(mView, new LayoutParams
+		        		(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+		}
+	}
+	
 	private void initializeMoPub() {
 //		moPubView.refreshDrawableState();
-		if(mView != null)
-			mView.removeAllViews();
-		
+
 		mView = new MoPubView(getApplicationContext());
-		parent.removeAllViews();
-		parent.addView(mView, new LayoutParams
+		adSlotFramelayout.removeAllViews();
+		adSlotFramelayout.addView(mView, new LayoutParams
 	        		(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
-		 
-//		mView.setVisibility(View.VISIBLE);
-//		vizAdSlot.setVisibility(View.GONE);
-//		mView.setAdUnitId("b195f8dd8ded45fe847ad89ed1d016da");
-//		mView.loadAd();
-//		mView.setBannerAdListener(this);
+
 		
 		if(isVizuryInterested) {
 			Log.d("AB","initializeMoPub : vizInteresetd : destroying mopubView");
 			mView.destroy();
-			mView.removeAllViews();
-			mView.addView(w);
+			
+			adSlotFramelayout.removeAllViews();
+			adSlotFramelayout.addView(vizuryWebView);
+//			mView.addView(vizuryWebView);
+			vizuryWebView.loadUrl(vizBannerURL);
 //			mView.setVisibility(View.GONE);
 //			vizAdSlot.setVisibility(View.VISIBLE);			
 		}
@@ -134,23 +127,6 @@ public class MainActivity extends ActionBarActivity implements BannerAdListener 
 //			mView.setVisibility(View.VISIBLE);
 //			vizAdSlot.setVisibility(View.GONE);
 		}
-		 
-		 
-//		MoPubView moPubView = (MoPubView) findViewById(R.id.adview);
-//		moPubView.setVisibility(View.VISIBLE);
-//		vizAdSlot.setVisibility(View.GONE);
-//		moPubView.setAdUnitId("b195f8dd8ded45fe847ad89ed1d016da");
-//		moPubView.loadAd();
-//		moPubView.setBannerAdListener(this);
-		
-//		if(isVizuryInterested) {
-//			Log.d("AB","initializeMoPub : vizInteresetd : destroying mopubView");
-//			moPubView.setVisibility(View.GONE);
-//			vizAdSlot.setVisibility(View.VISIBLE);
-//			moPubView.destroy();
-//		}
-//		Log.d("AB","framwlayout Height "+moPubView.getLayoutParams().height + " Width " + moPubView.getLayoutParams().height);
-
 	}
 	
 
@@ -158,7 +134,7 @@ public class MainActivity extends ActionBarActivity implements BannerAdListener 
 	public void onBannerLoaded(MoPubView paramMoPubView) {
 //        final DisplayMetrics displayMetrics = getApplicationContext().getResources().getDisplayMetrics();
 //        TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dips, displayMetrics);
-//		Log.d("AB","height " + moPubView.getAdHeight() + " width " + moPubView.getAdHeight());
+		Log.d("AB","onBannerLoaded height " + paramMoPubView.getAdHeight() + " width " + paramMoPubView.getAdHeight());
 		// TODO Auto-generated method stub
 		Toast.makeText(getApplicationContext(), 
 	            "Banner successfully loaded.", Toast.LENGTH_SHORT).show();
@@ -168,7 +144,7 @@ public class MainActivity extends ActionBarActivity implements BannerAdListener 
 	@Override
 	public void onBannerFailed(MoPubView paramMoPubView,
 			MoPubErrorCode paramMoPubErrorCode) {
-		Log.d("AB","banerfailed");
+		Log.d("AB","onBannerFailed");
 
 		Toast.makeText(getApplicationContext(), 
 	            "onBannerFailed.", Toast.LENGTH_SHORT).show();
@@ -179,7 +155,7 @@ public class MainActivity extends ActionBarActivity implements BannerAdListener 
 	@Override
 	public void onBannerClicked(MoPubView paramMoPubView) {
 		// TODO Auto-generated method stub
-		Log.d("AB","bannerClicked");
+		Log.d("AB","onBannerClicked");
 
 		Toast.makeText(getApplicationContext(), 
 	            "onBannerClicked", Toast.LENGTH_SHORT).show();
@@ -189,7 +165,7 @@ public class MainActivity extends ActionBarActivity implements BannerAdListener 
 	@Override
 	public void onBannerExpanded(MoPubView paramMoPubView) {
 		// TODO Auto-generated method stub
-		Log.d("AB","bannerExpanded");
+		Log.d("AB","onBannerExpanded");
 
 		Toast.makeText(getApplicationContext(), 
 	            "onBannerExpanded.", Toast.LENGTH_SHORT).show();
@@ -199,7 +175,7 @@ public class MainActivity extends ActionBarActivity implements BannerAdListener 
 	@Override
 	public void onBannerCollapsed(MoPubView paramMoPubView) {
 		// TODO Auto-generated method stub
-		Log.d("AB","bannerColapsed");
+		Log.d("AB","onBannerCollapsed");
 
 		Toast.makeText(getApplicationContext(), 
 	            "onBannerCollapsed.", Toast.LENGTH_SHORT).show();
@@ -291,26 +267,9 @@ public class MainActivity extends ActionBarActivity implements BannerAdListener 
 //			Log.d("AB","processVizuryResponse : uri is " + uri );
 			if(uri != null && uri != "") {
 				Log.d("AB","process viz response : setting Vizury is Intereseted !!");
-				isVizuryInterested = true;		
-			    w.loadUrl(uri);
-			    
-//			    if(moPubView.getVisibility() == View.VISIBLE) {
-//					vizAdSlot.setVisibility(View.VISIBLE);
-//					moPubView.setVisibility(View.GONE);
-//					moPubView.destroy();
-//			    }
-			    
-//			    moPubView.destroy();
-			    
-//				Log.d("AB","childCount "+moPubView.getChildCount());
-//				Log.d("AB","processVizuryResponse -> callling destroy and adding new view from vizury");
-//			    vizAdSlot.addView(w);
-//				moPubView.addView(w); 
-				
-//				 WebView wv = (WebView) findViewById(R.id.webview);
-//				 wv.getSettings().setJavaScriptEnabled(true);
-//				 wv.setBackgroundColor(Color.TRANSPARENT);
-//				 wv.loadUrl(uri);
+				isVizuryInterested = true;
+				vizBannerURL = uri;
+//			    w.loadUrl(uri);
 			}
 		}
 	}
